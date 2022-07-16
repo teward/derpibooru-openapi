@@ -1,0 +1,1519 @@
+openapi: 3.0.3
+info:
+  title: Derpibooru API
+  description: This is the documentation for the Derpibooru API.  It has been converted, for the purposes of this documentation, to OpenAPI 3.0.3 to work with the Swagger editor and documentation displayer. <br/><br/>
+    Be aware that any endpoint that specifies the parameter of `key` uses the API key authentication.  While the `key` is not required in *all* cases, it is better to use the `key` parameter because it'll reflect more of what you see on the Derpibooru site, especially when your user uses a default filter that is not the Derpibooru global default. <br/><br/>
+    This document as is was contributed by a member of the Derpibooru site, however this is not maintained by the Philomena developers.  Philomena is the software that runs Derpibooru, and while the API is fully code documented there, the API documentation is not up to date, and there may be chagnes to the API that are not reflected in this document either as it is community contributed.
+  version: July 16, 2022
+
+servers:
+- url: https://derpibooru.org/api/v1/json
+
+tags:
+- name: Routes
+- name: Image Endpoints
+- name: Tag Endpoints
+- name: Comment Endpoints
+- name: Post Endpoints
+- name: Search Endpoints
+- name: User Endpoints
+- name: Filter Endpoints
+- name: oEmbed Endpoints
+- name: Forum Endpoints
+
+paths:
+  /comments/{comment_id}:
+    get:
+      tags:
+      - Comment Endpoints
+      description: Fetches a *comment response* for the comment ID referenced by the
+        comment_id URL parameter
+      parameters:
+      - name: comment_id
+        in: path
+        description: Comment ID
+        required: true
+        schema:
+          type: integer
+          example: 10035937
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  comment:
+                    $ref: '#/components/schemas/Comment'
+        500:
+          description: unsuccessful operation, likely an invalid comment ID
+  /images/{image_id}:
+    get:
+      tags:
+      - Image Endpoints
+      security:
+      - api_key: []
+      description: Fetches an *image response* for the image ID referenced by the `image_id` URL parameter.
+      parameters:
+      - name: image_id
+        in: path
+        description: Image ID
+        required: true
+        schema:
+          type: integer
+          example: 1
+      - $ref: '#/components/parameters/key'
+      - $ref: '#/components/parameters/filter_id'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  image:
+                    $ref: '#/components/schemas/Image'
+        500:
+          description: unsuccessful operation, likely an invalid image ID
+          content: {}
+  /images:
+    post:
+      tags:
+      - Image Endpoints
+      security:
+      - api_key: []
+      description: Submits a new image. Both `key` and `url` are required. See 'default'
+        error response for error replies.
+      parameters:
+      - $ref: '#/components/parameters/key'
+      requestBody:
+        content:
+          'application/json':
+            schema:
+              properties:
+                image:
+                  $ref: '#/components/schemas/ImageBody'
+                url:
+                  type: string
+                  example: https://derpicdn.net/img/view/2012/1/2/0.jpg
+        required: false
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  image:
+                    $ref: '#/components/schemas/Image'
+        500:
+          description: unsuccessful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ImageErrors'
+  /images/featured:
+    get:
+      tags:
+      - Image Endpoints
+      description: Fetches an *image response* for the current featured image.
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  image:
+                    $ref: '#/components/schemas/Image'
+  /tags/{tag_id}:
+    get:
+      tags:
+        - Tag Endpoints
+      description: Fetches a *tag response* for the *tag slug* given by the `tag_id` URL parameter. The tag's ID is *not* used.
+      parameters:
+        - name: tag_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "artist-colon-atryl"
+      
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  test:
+                    $ref: '#/components/schemas/Tag'
+  /posts/{post_id}:
+    get:
+      tags:
+      - Post Endpoints
+      description: Fetches a *post response* for the post ID given by the `post_id` URL parameter
+      parameters:
+        - name: post_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 2730144
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  post:
+                    $ref: '#/components/schemas/Post'
+        500:
+          description: unsuccessful operation
+  /profiles/{user_id}:
+    get:
+      tags:
+        - User Endpoints
+      description: Fetches a *profile response* for the user ID given by the `user_id` URL parameter
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 216494
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        500:
+          description: unsuccessful operation
+  /filters/{filter_id}:
+    get:
+      tags:
+        - Filter Endpoints
+      description: Fetches a *filter response* for the filter ID given by the `filter_id` URL parameter
+      security:
+        - api_key: []
+      parameters:
+        - name: filter_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 56027
+        - $ref: '#/components/parameters/key'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  filter:
+                    $ref: '#/components/schemas/Filter'
+        500:
+          description: unsuccessful operation
+  /filters/user:
+    get:
+      tags:
+        - Filter Endpoints
+      description: Fetches a list of *filter responses* that belong to the user given by *key*. If no *key* is given or it is invalid, this will return a *403 Forbidden* error.
+      security:
+        - api_key: []
+      parameters:
+        - $ref: '#/components/parameters/key'
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  filters:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Filter'
+  /oembed:
+    get:
+      tags:
+        - oEmbed Endpoints
+      description: Fetches an *oEmbed response* for the given app link or CDN URL.
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+            example: https://derpicdn.net/img/2012/1/2/3/full.png
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/oEmbed'
+        500:
+          description: unsuccessful operation
+  /search/comments:
+    get:
+      tags:
+       - Search Endpoints
+      description: Executes the search given by the `q` query parameter, and returns *comment responses* sorted by descending creation time. (Use the specific image_Id search example to match example output.)
+      security:
+        - api_key: []
+      parameters:
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/key'
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+  /search/galleries:
+    get:
+      tags:
+        - Search Endpoints
+      description: Executes the search given by the `q` query parameter, and returns *gallery responses* sorted by descending creation time. (Use the specific title search with wildcard example to match sample data)
+      security:
+        - api_key: []
+      parameters:
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/key'
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  galleries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Gallery'
+                  total:
+                    type: integer
+                    description: Total number of galleries found.
+                    example: 1
+                    
+  /search/images:
+    get:
+      tags:
+        - Search Endpoints
+      description: Executes the search given by the `q` query parameter, and returns *image responses*.  Use images tag search example for query string to get sample output.
+      security:
+        - api_key: []
+      parameters:
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/key'
+        - $ref: '#/components/parameters/filter_id'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/per_page'
+        - $ref: '#/components/parameters/sd'
+        - $ref: '#/components/parameters/sf'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  images:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Image'
+                  interactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Interaction'
+                    example: []
+                  total:
+                    type: integer
+                    description: Total number of galleries found.
+                    example: 1845845
+  /search/tags:
+    get:
+      tags:
+        - Search Endpoints
+      description: Executes the search given by the `q` query parameter, and returns *tag responses* sorted by descending image count.  Use the analyzed_name query example to get sample output.
+      parameters:
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/page'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  tags:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tag'
+                  total:
+                    type: integer
+                    description: Total number of tags found.
+                    example: 2
+
+  /search/reverse:
+    post:
+      tags:
+       - Search Endpoints
+      description: Returns *image responses* based on the results of reverse-searching the image given by the `url` query parameter.
+      security:
+        - api_key: []
+      parameters:
+        - $ref: '#/components/parameters/key'
+        - name: url
+          in: query
+          schema:
+            type: string
+            example: https://derpicdn.net/img/view/2012/1/2/1.png
+          required: true
+          description: The URL to use for sourcing the image to do a reverse image search on.
+        - name: distance
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            example: 0
+          required: false
+          description: How close to the original image a result must be.  0 means exact.
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  images:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Image'
+                  interactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Interaction'
+                    example: []
+                  total:
+                    type: integer
+                    description: Total number of images returned from the search.
+                    example: 1
+                    
+  /forums:
+    get:
+      tags:
+        - Forum Endpoints
+      description: Fetches a list of *forum responses*
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  forums:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Forum'
+                  total:
+                    type: integer
+                    description: Total number of forums found.
+                    example: 9
+  /forums/{short_name}:
+    get:
+      tags:
+        - Forum Endpoints
+      description: Fetches a *forum response* for the abbreviated name given by the `short_name` parameter.
+      parameters:
+        - name: short_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: dis
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  forum:
+                    $ref: '#/components/schemas/Forum'
+
+  /forums/{short_name}/topics:
+    get:
+      tags:
+        - Forum Endpoints
+      description: Fetches a list of *topic responses* for the abbreviated forum name given by the `short_name` URL parameter.
+      parameters:
+        - name: short_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: dis
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  topics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Topic'
+                  total:
+                    type: integer
+                    description: Number of topics in the specified forum.
+                    example: 4261
+                  
+  /forums/{short_name}/topics/{topic_slug}:
+    get:
+      tags:
+        - Forum Endpoints
+      description: Fetches a *topic response* for the abbreviated forum name given by the `short_name` and topic given by `topic_slug` URL parameters.
+      parameters:
+        - name: short_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: meta
+        - name: topic_slug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: site-changelog-developers-notes
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  topic:
+                    $ref: '#/components/schemas/Topic'
+                    
+
+  /forums/{short_name}/topics/{topic_slug}/posts:
+    get:
+      tags:
+        - Forum Endpoints
+      description: Fetches a list of *post responses* for the abbreviated forum name given by the `short_name` and topic given by `topic_slug` URL parameters.
+      parameters:
+        - name: short_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: meta
+        - name: topic_slug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: site-changelog-developers-notes
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+                  total:
+                    type: integer
+                    description: Number of posts in the specified topic.
+
+  /forums/{short_name}/topics/{topic_slug}/posts/{post_id}:
+    get:
+      tags:
+        - Forum Endpoints
+      description: Fetches a *post response* for the abbreviated forum name given by the `short_name`, topic given by `topic_slug` and post given by `post_id` URL parameters.
+      parameters:
+        - name: short_name
+          in: path
+          required: true
+          schema:
+            type: string
+            example: meta
+        - name: topic_slug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: site-changelog-developers-notes
+        - name: post_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 2730144
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  post:
+                    $ref: '#/components/schemas/Post'
+                  total:
+                    type: integer
+                    description: Number of posts in the specified topic.
+
+components:
+  schemas:
+    Image:
+      type: object
+      properties:
+        animated:
+          type: boolean
+          description: Whether the image is animated.
+          example: false
+        aspect_ratio:
+          type: number
+          description: The image's width divided by its height.
+          example: 1.0
+        comment_count:
+          type: integer
+          description: The number of comments made on the image.
+          example: 205
+        created_at:
+          type: string
+          description: The creation time, in UTC, of the image.
+          format: date-time
+          example: 2012-01-02T03:12:33Z
+        deletion_reason:
+          type: string
+          description: The hide reason for the image, or `null` if none provided.
+            This will only have a value on images which are deleted for a rule violation.
+          example: null
+        descripton:
+          type: string
+          description: The image's description.
+          example: ""
+        downvotes:
+          type: integer
+          description: The number of downvotes the image has.
+          example: 17
+        duplicate_of:
+          type: integer
+          description: The ID of the target image, or `null` if none provided. This
+            will only have a value on images which are merged into another image.
+        duration:
+          type: number
+          description: The number of seconds the image lasts, if animated, otherwise
+            .04.
+          example: 0.04
+        faves:
+          type: integer
+          description: The number of faves the image has.
+          example: 1644
+        first_seen_at:
+          type: string
+          description: The time, in UTC, the image was first seen (before any duplicate
+            merging).
+          format: date-time
+          example: 2012-01-02T03:12:33Z
+        format:
+          type: string
+          description: The file extension of the image. One of `"gif", "jpg", "jpeg",
+            "png", "svg", "webm"`.
+          example: png
+        height:
+          type: integer
+          description: The image's height, in pixels.
+          example: 900
+        hidden_from_users:
+          type: boolean
+          description: Whether the image is hidden. An image is hidden if it is merged
+            or deleted for a rule violation.
+          example: false
+        id:
+          type: integer
+          description: The image's ID.
+          example: 1
+        intensities:
+          type: object
+          properties: {}
+          description: Optional object of [internal image intensity data](https://github.com/derpibooru/cli_intensities)
+            for deduplication purposes. May be `null` if intensities have not yet
+            been generated.
+          example:
+            ne: 212.264528
+            nw: 236.603365
+            se: 209.61604
+            sw: 216.636501
+        mime_type:
+          type: string
+          description: The MIME type of this image. One of `"image/gif", "image/jpeg",
+            "image/png", "image/svg+xml", "video/webm"`.
+          example: image/png
+        name:
+          type: string
+          description: The filename that the image was uploaded with.
+          example: 1__safe_fluttershy_solo_cloud_happy_flying_upvotes+galore_artist-colon-speccysy_get_sunshine
+        orig_sha512_hash:
+          type: string
+          description: The SHA512 hash of the image as it was originally uploaded.
+          example: null
+        processed:
+          type: boolean
+          description: Whether the image has finished optimization.
+          example: true
+        representations:
+          type: object
+          properties:
+            full:
+              type: string
+              example: https://derpicdn.net/img/view/2012/1/2/1.png
+            large:
+              type: string
+              example: https://derpicdn.net/img/2012/1/2/1/full.png
+            medium:
+              type: string
+              example: https://derpicdn.net/img/2012/1/2/1/medium.png
+            small:
+              type: string
+              example: https://derpicdn.net/img/2012/1/2/1/small.png
+            tall:
+              type: string
+              example: https://derpicdn.net/img/2012/1/2/1/full.png
+            thumb:
+              type: string
+              example: https://derpicdn.net/img/2012/1/2/1/thumb.png
+            thumb_small:
+              type: string
+              example: https://derpicdn.net/img/2012/1/2/1/thumb_small.png
+            thumb_tiny:
+              type: string
+              example: https://derpicdn.net/img/2012/1/2/1/thumb_tiny.png
+          description: A mapping of representation names to their respective URLs.
+          example: null
+        score:
+          type: integer
+          description: The image's number of upvotes minus the image's number of downvotes.
+          example: 2366
+        sha512_hash:
+          type: string
+          description: The SHA512 hash of this image after it has been processed.
+          example: f16c98e2848c2f1bfff3985e8f1a54375cc49f78125391aeb80534ce011ead14e3e452a5c4bc98a66f56bdfcd07ef7800663b994f3f343c572da5ecc22a9660f
+        size:
+          type: integer
+          description: The number of bytes the image's file contains.
+          example: 860914
+        source_url:
+          type: integer
+          description: The current source URL of the image.
+        spoilered:
+          type: boolean
+          description: Whether the image is hit by the current filter.
+          example: false
+        tag_count:
+          type: integer
+          description: The number of tags present on the image.
+          example: 43
+        tag_ids:
+          type: array
+          description: A list of tag IDs the image contains.
+          example:
+          - 1458
+          - 15442
+          - 23275
+          - 23294
+          - 23981
+          - 24249
+          - 24672
+          - 26776
+          - 27141
+          - 27724
+          - 27764
+          - 28260
+          - 29630
+          - 33258
+          - 33983
+          - 34506
+          - 34678
+          - 36872
+          - 37319
+          - 37727
+          - 38185
+          - 40482
+          - 41700
+          - 41916
+          - 42350
+          - 43338
+          - 43567
+          - 43587
+          - 43982
+          - 46526
+          - 47596
+          - 73396
+          - 80809
+          - 83982
+          - 93524
+          - 151945
+          - 182100
+          - 187857
+          - 208970
+          - 227349
+          - 321220
+          - 364605
+          - 449198
+          items:
+            type: integer
+        tags:
+          type: array
+          description: A list of tag names the image contains.
+          example:
+          - artifact
+          - artist:speccysy
+          - cloud
+          - cloudy
+          - crepuscular rays
+          - cute
+          - dead source
+          - eyes closed
+          - female
+          - fluttershy
+          - flying
+          - g4
+          - happy
+          - long hair
+          - mare
+          - messy mane
+          - milestone
+          - outdoors
+          - pegasus
+          - pink mane
+          - pony
+          - safe
+          - signature
+          - sky
+          - solo
+          - stretching
+          - sunlight
+          - sunshine
+          - tail
+          - upside down
+          - wings
+          - "2011"
+          - shyabetes
+          - sweet dreams fuel
+          - weapons-grade cute
+          - pink tail
+          - smiling
+          - spread wings
+          - mammal
+          - index get
+          - derpibooru legacy
+          - first fluttershy picture on derpibooru
+          - one of the first
+          items:
+            type: string
+        thumbnails_generated:
+          type: boolean
+          description: Whether the image has finished thumbnail generation. Do not
+            attempt to load images from `view_url` or `representations` if this is
+            false.
+          example: true
+        updated_at:
+          type: string
+          description: The time, in UTC, the image was last updated.
+          format: date-time
+          example: 2022-04-25T09:30:57Z
+        uploader:
+          type: string
+          description: The image's uploader.
+          example: Clover the Clever
+        uploader_id:
+          type: integer
+          description: The ID of the image's uploader. `null` if uploaded anonymously.
+          example: 211188
+        upvotes:
+          type: integer
+          description: The image's number of upvotes.
+          example: 2383
+        view_url:
+          type: string
+          description: The image's view URL, including tags.
+          example: https://derpicdn.net/img/view/2012/1/2/1__dead+source_safe_artist-colon-speccysy_fluttershy_pegasus_pony_g4_2011_artifact_cloud_cloudy_crepuscular+rays_cute_derpibooru+legacy_eyes+closed_female.png
+        width:
+          type: integer
+          description: The image's width, in pixels.
+          example: 900
+        wilson_score:
+          type: number
+          description: The lower bound of the [Wilson score interval](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Wilson_score_interval)
+            for the image, based on its upvotes and downvotes, given a z-score corresponding
+            to a confidence of 99.5%.
+          example: 0.9869494210593284
+    ImageBody:
+      type: object
+      properties:
+        image:
+          type: object
+          properties:
+            description:
+              type: string
+              example: |
+                [bq]Hey there this is a test post![/bq]
+                Descriptions are *weird*.
+                Have a >>0 re-upload :)
+            tag_input:
+              type: string
+              example: artist needed, safe, derpy hooves, pegasus, pony, adventure
+                in the comments, bag, building, chair, cigar, derpibooru legacy, eyes,
+                featured image, female, grin, gritted teeth, hilarious in hindsight,
+                image macro, it begins, j. jonah jameson, letter, mail, male, mare,
+                meme, muffin, necktie, paper, parody, phone, ponified, sitting, smiling,
+                smoking, song in the comments, spider-man, stallion, swinging
+            source_url:
+              type: string
+              example: https://derpibooru.org/images/0
+        url:
+          type: string
+          example: https://derpicdn.net/img/view/2012/1/2/0.jpg
+    Comment:
+      type: object
+      properties:
+        author:
+          type: string
+          description: The comment's author.
+          example: "∆YAPPwikia Alicorn-Stevonnie FANDOM™"
+        avatar:
+          type: string
+          description: The URL of the author's avatar. May be a link to the CDN path,
+            or a `data:` URI.
+          example: "https://derpicdn.net/avatars/2022/6/11/1654929211813033013023493.jpg"
+        body:
+          type: string
+          description: The comment text.
+          example: "1,000,001st image is Trixie made from lots of collage?\r\n*Understandable have a nice day!*"
+        created_at:
+          type: string
+          description: The creation time, in UTC, of the comment.
+          format: date-time
+          example: "2022-03-28T17:07:09Z"
+        edit_reason:
+          type: string
+          description: The edit reason for this comment, or `null` if none provided.
+          example: null
+        edited_at:
+          type: string
+          description: The time, in UTC, the comment was last edited at, or `null` if it was not edited.
+          format: date-time
+          example: null
+        id:
+          type: integer
+          description: The comment's ID
+          example: 10035937
+        image_id:
+          type: integer
+          description: The ID of the image the comment belongs to.
+          example: 1000000
+        updated_at:
+          type: string
+          description: The time, in UTC, the comment was last updated at.
+          format: date-time
+          example:   "2022-03-28T17:07:09Z"
+        user_id:
+          type: integer
+          description: The ID of the user the comment belongs to, if any.
+          example: 593634
+    Forum:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The forum's name.
+          example: "General Discussion"
+        short_name:
+          type: string
+          description: The forum's short name (used to identify it).
+          example: "dis"
+        description:
+          type: string
+          description: The forum's description.
+          example: "This is a discussion forum for everything unrelated to the show or other forums"
+        topic_count:
+          type: integer
+          description: The amount of topics in the forum.
+          example: 4445
+        post_count:
+          type: integer
+          description: The amount of posts in the forum.
+          example: 1371501
+    Topic:
+      type: object
+      properties:
+        slug:
+          type: string
+          description: The topic's slug (used to identify it).
+          example: "site-changelog-developers-notes"
+        title:
+          type: string
+          description: The topic's title.
+          example:  "Site Changelog / Developers Notes"
+        post_count:
+          type: integer
+          description: The amount of posts in the topic.
+          example: 39
+        view_count:
+          type: integer
+          description: The amount of views the topic has received.
+          example: 13186
+        sticky:
+          type: boolean
+          description: Whether the topic is sticky.
+          example: true
+        last_replied_to_at:
+          type: string
+          description: The time, in UTC, when the last reply was made.
+          format: date-time
+          example: "2019-12-21T17:20:28Z"
+        locked:
+          type: boolean
+          description: Whether the topic is locked.
+          example: true
+        user_id:
+          type: integer
+          description: The ID of the user who made the topic. `null` if posted anonymously.
+          example: 216494
+        author:
+          type: string
+          description: The name of the user who made the topic.
+          example: "Joey"
+    Post:
+      type: object
+      properties:
+        author:
+          type: string
+          description: The post's author.
+          example: Joey
+        avatar:
+          type: string
+          description: The URL of the author's avatar. May be a CDN path, or a `data:`
+            URI.
+          example: "https://derpicdn.net/avatars/2019/11/13/14215782720827205181237247282992609700.png"
+        body:
+          type: string
+          description: The post text.
+          example: "In the interest of both transparency and allowing everyone to know what's going on with the site, we're introducing this thread to provide more detailed, informative information about updates to the website's code. While we've had the [changelog](/changelog) page for years, the notes on there are usually too concise and don't make a lot of sense unless you can see the code changes that they were attached to. \n \nThis thread will mostly list updates that impact the usability and performance of Derpibooru. We generally will not be posting updates regarding changes that won't have any noticeable effect on how the site works (such as correcting minor typos, updating mod tools, etc). If you'd like to keep up to date, simply subscribe to this thread, or just keep checking back regularly. \n \nIf you would like to discuss any changes that are mentioned in this thread, suggest a new feature or addition to Derpibooru, or report a bug you found, please see the [Feature Suggestion](/meta/feature-suggestions-and-discussion) and [Bug Reporting](/meta/report-site-bugs-here) threads. Note that if you found a bug which you believe to be a security issue, please send a PM to a site developer instead. \n \nFinally, please note that sometimes changes may be announced in this thread before they are actually implemented on the site. This is simply because of our deployment workflow, just be patient as most changes are deployed within 24 hours."
+        created_at:
+          type: string
+          description: The creation time, in UTC, of the post.
+          format: date-time
+          example: "2016-11-28T23:29:14Z"
+        edit_reason:
+          type: string
+          description: The edit reason for this post.
+          example: 
+        edited_at:
+          type: string
+          description: The time, in UTC, this post was last edited at, or `null` if
+            it was not edited.
+          format: date-time
+          example: 
+        id:
+          type: integer
+          description: The post's ID (used to identify it).
+          example: 2730144
+        updated_at:
+          type: string
+          description: The time, in UTC, the post was last updated at.
+          format: date-time
+          example: "2016-11-28T23:29:14Z"
+        user_id:
+          type: integer
+          description: The ID of the user the post belongs to, if any.
+          example: 216494
+    Tag:
+      type: object
+      properties:
+        aliased_tag:
+          type: string
+          description: The slug of the tag this tag is aliased to, if any.
+          example: 
+        aliases:
+          type: array
+          description: The slugs of the tags aliased to this tag.
+          items:
+            type: string
+          example: [artist-colon-atrylplus]
+        category:
+          type: string
+          description: The category class of this tag. One of `"character", "content-fanmade",
+            "content-official", "error", "oc", "origin", "rating", "species", "spoiler"`.
+          example: origin
+        description:
+          type: string
+          description: The long description of the tag.
+          example: "[Tumblr #1](http://atryl.tumblr.com) | [Tumblr #2](http://atrylplus.tumblr.com) | [FA](https://www.furaffinity.net/user/atryl) | [DA](https://atryl.deviantart.com) | [IB](https://inkbunny.net/atryl) | [Patreon](http://www.patreon.com/atryl) \r\n \r\nStreams:\r\n[Picarto](https://www.picarto.tv/live/channel.php?watch=atryl) | [Derpi](/channels/atryl) | [Livestream](http://www.livestream.com/atryl)"
+        dnp_entries:
+          type: array
+          description: An array of objects containing DNP entries claimed on the tag.
+          items:
+            type: string
+          example: []
+        id:
+          type: integer
+          description: The tag's ID.
+          example: 2874
+        images:
+          type: integer
+          description: The image count of the tag.
+          example: 2039
+        implied_by_tags:
+          type: array
+          description: The slugs of the tags this tag is implied by.
+          items:
+            type: string
+          example: []
+        implied_tags:
+          type: array
+          description: The slugs of the tags this tag implies.
+          items:
+            type: string
+          example: []
+        name:
+          type: string
+          description: The name of the tag.
+          example: "artist:atryl"
+        name_in_namespace:
+          type: string
+          description: The name of the tag in its namespace.
+          example: atryl
+        namespace:
+          type: string
+          description: The namespace of this tag.
+          example: artist
+        short_description:
+          type: string
+          description: The short description for the tag.
+          example: 
+        slug:
+          type: string
+          description: The slug for the tag.
+          example: artist-colon-atryl
+        spoiler_image_uri:
+          type: string
+          description: The spoiler image for the tag.
+          example: 
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The ID of the user.
+          example: 216494
+        name:
+          type: string
+          description: The name of the user.
+          example: Joey
+        slug:
+          type: string
+          description: The slug of the user.
+          example: Joey
+        role:
+          type: string
+          description: The role of the user.
+          example: user
+        description:
+          type: string
+          description: The description (bio) of the user.
+          example: "Every year I take a bunch of pictures of OCs and copy/paste them into one really big picture.\r\n\r\nHave some Minuette:  \r\n>>997470p \r\n \r\nAvatar Source: >>1932044"
+        avatar_url:
+          type: string
+          description: The URL of the user's thumbnail. `null` if the avatar is not
+            set.
+          example: "https://derpicdn.net/avatars/2019/11/13/14215782720827205181237247282992609700.png"
+        created_at:
+          type: string
+          description: The creation time, in UTC, of the user.
+          format: date-time
+          example:   "2012-06-25T01:15:57Z"
+        comments_count:
+          type: integer
+          description: The comment count of the user.
+          example: 5376
+        uploads_count:
+          type: integer
+          description: The upload count of the user.
+          example: 797
+        posts_count:
+          type: integer
+          description: The forum posts count of the user.
+          example: 5005
+        topics_count:
+          type: integer
+          description: The forum topics count of the user.
+          example: 183
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Links'
+        awards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Awards'
+    Filter:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: The id of the filter.
+          example: 56027
+        name:
+          type: string
+          description: The name of the filter.
+          example: Everything
+        description:
+          type: string
+          description: The description of the filter.
+          example: "This filter won't filter anything out at all - that means NSFW content!"
+        user_id:
+          type: integer
+          description: The id of the user the filter belongs to. `null` if it isn't
+            assigned to a user (usually `system` filters only).
+          example: 
+        user_count:
+          type: integer
+          description: The amount of users employing this filter.
+          example: 80438
+        system:
+          type: boolean
+          description: If `true`, this is a system filter. System filters are usable by anyone and don't have a `user_id` set.
+          example: true
+        public:
+          type: boolean
+          description: If `true`, this is a public filter. Public filters are usable by anyone.
+          example: false
+        spoilered_tag_ids:
+          type: array
+          description: A list of tag IDs (as integers) that this filter will spoil.
+          items:
+            type: integer
+          example: []
+        spoilered_complex:
+          type: string
+          description: The complex spoilered filter.
+          example: 
+        hidden_tag_ids:
+          type: array
+          description: A list of tag IDs (as integers) that this filter will hide.
+          items:
+            type: integer
+          example: []
+        hidden_complex:
+          type: string
+          description: The complex hidden filter.
+          example: 
+    Links:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          description: The ID of the user who owns this link.
+        created_at:
+          type: string
+          description: The creation time, in UTC, of this link.
+          format: date-time
+        state:
+          type: string
+          description: The state of this link.
+        tag_id:
+          type: integer
+          description: The ID of an associated tag for this link. `null` if no tag
+            linked.
+    Awards:
+      type: object
+      properties:
+        image_url:
+          type: string
+          description: The URL of this award.
+          example: "https://derpicdn.net/media/2016/10/14/8712887b1e0d35ef02f8cf8.svg"
+        title:
+          type: string
+          description: The title of this award.
+          example: Flexible
+        id:
+          type: integer
+          description: The ID of the badge this award is derived from.
+          example: 45
+        label:
+          type: string
+          description: The label of this award.
+          example: Bendy Pony
+        awarded_on:
+          type: string
+          description: The time, in UTC, when this award was given.
+          format: date-time
+          example: "2016-02-28T14:52:15Z"
+    Gallery:
+      type: object
+      properties:
+        description:
+          type: string
+          description: The gallery's description.
+          example: "Safe and Adorable"
+        id:
+          type: integer
+          description: The gallery's ID
+          example: 7415
+        spoiler_warning:
+          type: string
+          description: The gallery's spoiler warning.
+          example: ""
+        thumbnail_id:
+          type: integer
+          description: The ID of the cover image for the gallery.
+          example: 1714046
+        title:
+          type: string
+          description: The gallery's title.
+          example: "Dawwwwwww!"
+        user:
+          type: string
+          description: The name of the gallery's creator.
+          example: "Korora"
+        user_id:
+          type: integer
+          description: The ID of the gallery's creator.
+          example: 212726
+    ImageErrors:
+      type: object
+      properties:
+        image:
+          type: array
+          description: Errors in the submitted image.
+          items:
+            type: string
+        image_aspect_ratio:
+          type: array
+          description: Errors in the submitted image.
+          items:
+            type: string
+        image_format:
+          type: array
+          description: When an image is unsupported (ex. WEBP)
+          items:
+            type: string
+        image_height:
+          type: array
+          description: Errors in the submitted image.
+          items:
+            type: string
+        image_width:
+          type: array
+          description: Errors in the submitted image.
+          items:
+            type: string
+        image_size:
+          type: array
+          description: Usually if an image that is too large is uploaded.
+          items:
+            type: string
+        image_is_animated:
+          type: array
+          description: Errors in the submitted image.
+          items:
+            type: string
+        image_mime_type:
+          type: array
+          description: Errors in the submitted image.
+          items:
+            type: string
+        image_orig_sha512_hash:
+          type: array
+          description: Errors in the submitted image. If *has already been taken*
+            is present, means the image already exists in the database.
+          items:
+            type: string
+        image_sha512_hash:
+          type: array
+          description: Errors in the submitted image.
+          items:
+            type: string
+        tag_input:
+          type: array
+          description: Errors with the tag metadata.
+          items:
+            type: string
+        uploaded_image:
+          type: array
+          description: Errors in the submitted image.
+          items:
+            type: string
+    oEmbed:
+      type: object
+      properties:
+        author_name:
+          type: string
+          description: The comma-delimited names of the image authors.
+          example: "moe"
+        author_url:
+          type: string
+          description: The source URL of the image.
+          example: "https://www.equestriadaily.com/2011/07/drawfriend-stuff-130.html"
+        cache_age:
+          type: integer
+          description: Always `7200`.
+          example: 7200
+        derpibooru_comments:
+          type: integer
+          description: The number of comments made on the image.
+          example: 70
+        derpibooru_id:
+          type: integer
+          description: The image's ID
+          example: 3
+        derpibooru_score:
+          type: integer
+          description: The image's number of upvotes minus the image's number of downvotes.
+          example: 2888
+        derpibooru_tags:
+          type: array
+          description: The names of the image's tags.
+          items:
+            type: string
+          example: ["alicorn","artist:moe","beret","bipedal","celestial mechanics","cute","duo","earth pony","easel","female","flower","flying","forest","frown","g4","grass","hat","magic","mare","moon","mountain","open mouth","paint","paintbrush","painter","painting","palette","pinkie pie","pointing","pony","princess luna","river","safe","scenery","signature","sitting","tree","unamused","valley","wallpaper","moon work","creek","scenery porn","s1 luna","diapinkes","featured image","sweet dreams fuel","duo female","lunabetes","spread wings","wall of tags","luna is not amused","16:10","first luna picture on derpibooru","first pinkie pie picture on derpibooru","one of the first","first alicorn picture on derpibooru"]
+        provider_name:
+          type: string
+          description: Always `"Derpibooru"`.
+          example: "Derpibooru"
+        provider_url:
+          type: string
+          description: Always `"https://derpibooru.org"
+          example: "https://derpibooru.org"
+        title:
+          type: string
+          description: The image's ID and associated tags, as would be given on the title of the image page.
+          example: "#3 - safe, artist:moe, pinkie pie, princess luna, alicorn, earth pony, pony, g4, 16:10, beret, bipedal, celestial mechanics, creek, cute, diapinkes, duo, duo female, easel, featured image, female, first alicorn picture on derpibooru, first luna picture on derpibooru, first pinkie pie picture on derpibooru, flower, flying, forest, frown, grass, hat, luna is not amused, lunabetes, magic, mare, moon, moon work, mountain, one of the first, open mouth, paint, paintbrush, painter, painting, palette, pointing, river, s1 luna, scenery, scenery porn, signature, sitting, spread wings, sweet dreams fuel, tree, unamused, valley, wall of tags, wallpaper - Derpibooru"
+        type:
+          type: string
+          description: Always `"photo"`.
+          example: photo
+        version:
+          type: string
+          description: Always `"1.0"`.
+          example: "1.0"
+    Interaction:
+      type: object
+      properties:
+        image_id:
+          type: integer
+          description: The image ID that this interaction is tied to.
+        user_id:
+          type: integer
+          description: The user ID that this interaction is tied to.
+        interaction_type:
+          type: string
+          description: The type of interaction between the image noted by `image_id` and the user noted by `user_id`. Is always one of three values `"hidden", "faved", "voted"`.
+          enum:
+            - hidden
+            - faved
+            - voted
+        value:
+          type: string
+          description: What changed and in what direction for the object. Always one of `"up", "down", ""`
+          enum:
+            - up
+            - down
+            - "(empty string)"
+
+  parameters:
+    key:
+      name: key
+      in: query
+      description: An optional authentication token. If omitted, no user will be authenticated. You can find your authentication token in your [account settings](https://derpibooru.org/registration/edit)
+      schema:
+        type: string
+    filter_id:
+      name: filter_id
+      in: query
+      description: Assuming the user can access the filter ID given by the parameter,
+        overrides the current filter for this request. This is primarily useful for
+        unauthenticated API access.
+      schema:
+        type: integer
+    page:
+      name: page
+      in: query
+      description: Controls the current page of the response, if the response is paginated.
+        Empty values (or not including the parameter) default to the first page.
+      schema:
+        type: integer
+    per_page:
+      name: page
+      in: query
+      description: Controls the number of results per page, up to a limit of 50, if
+        the response is paginated. The default is 25
+      schema:
+        type: integer
+        default: 25
+    q:
+      name: q
+      in: query
+      description: The current search query, if the request is a search request.
+      required: true
+      schema:
+        type: string
+      examples:
+        image_id search:
+          summary: Specific image_id search.
+          value: image_id:1000000
+        title search:
+          summary: Specific title search with wildcard
+          value: "title:dawww*"
+        tag search:
+          summary: Images tag search query
+          value: "safe"
+        analyzed name search:
+          summary: analyzed_name search query
+          value: analyzed_name:artist:atryl
+    sd:
+      name: sd
+      in: query
+      description: The current sort direction, if the request is a search request.
+      schema:
+        type: string
+        enum:
+         - asc
+         - desc
+    sf:
+      name: sf
+      in: query
+      description: The current sort field, if the request is a search request.
+      schema:
+        type: string
+
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: key
+      in: query
