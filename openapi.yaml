@@ -10,7 +10,6 @@ servers:
 - url: https://derpibooru.org/api/v1/json
 
 tags:
-- name: Routes
 - name: Image Endpoints
 - name: Tag Endpoints
 - name: Comment Endpoints
@@ -47,35 +46,6 @@ paths:
                     $ref: '#/components/schemas/Comment'
         500:
           description: unsuccessful operation, likely an invalid comment ID
-  /images/{image_id}:
-    get:
-      tags:
-      - Image Endpoints
-      security:
-      - api_key: []
-      description: Fetches an *image response* for the image ID referenced by the `image_id` URL parameter.
-      parameters:
-      - name: image_id
-        in: path
-        description: Image ID
-        required: true
-        schema:
-          type: integer
-          example: 1
-      - $ref: '#/components/parameters/key'
-      - $ref: '#/components/parameters/filter_id'
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                properties:
-                  image:
-                    $ref: '#/components/schemas/Image'
-        500:
-          description: unsuccessful operation, likely an invalid image ID
-          content: {}
   /images:
     post:
       tags:
@@ -127,6 +97,35 @@ paths:
                 properties:
                   image:
                     $ref: '#/components/schemas/Image'
+  /images/{image_id}:
+    get:
+      tags:
+      - Image Endpoints
+      security:
+      - api_key: []
+      description: Fetches an *image response* for the image ID referenced by the `image_id` URL parameter.
+      parameters:
+      - name: image_id
+        in: path
+        description: Image ID
+        required: true
+        schema:
+          type: integer
+          example: 1
+      - $ref: '#/components/parameters/key'
+      - $ref: '#/components/parameters/filter_id'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                properties:
+                  image:
+                    $ref: '#/components/schemas/Image'
+        500:
+          description: unsuccessful operation, likely an invalid image ID
+          content: {}
   /tags/{tag_id}:
     get:
       tags:
