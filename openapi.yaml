@@ -60,12 +60,7 @@ paths:
         content:
           'application/json':
             schema:
-              properties:
-                image:
-                  $ref: '#/components/schemas/ImageBody'
-                url:
-                  type: string
-                  example: https://derpicdn.net/img/view/2012/1/2/0.jpg
+              $ref: '#/components/schemas/ImageBody'
         required: false
       responses:
         200:
