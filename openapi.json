@@ -2,8 +2,12 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Derpibooru API",
-    "description": "This is the documentation for the Derpibooru API.  It has been converted, for the purposes of this documentation, to OpenAPI 3.0.3 to work with the Swagger editor and documentation displayer. <br/><br/> Be aware that any endpoint that specifies the parameter of `key` uses the API key authentication.  While the `key` is not required in *all* cases, it is better to use the `key` parameter because it'll reflect more of what you see on the Derpibooru site, especially when your user uses a default filter that is not the Derpibooru global default. <br/><br/> This document as is was contributed by a member of the Derpibooru site, however this is not maintained by the Philomena developers.  Philomena is the software that runs Derpibooru, and while the API is fully code documented there, the API documentation is not up to date, and there may be chagnes to the API that are not reflected in this document either as it is community contributed.",
-    "version": "July 16, 2022"
+    "description": "This is the documentation for the Derpibooru API.  It has been converted, for the purposes of this documentation, to OpenAPI 3.0.3 to work with the Swagger editor and documentation displayer. <br/><br/> Be aware that any endpoint that specifies the parameter of `key` uses the API key authentication.  While the `key` is not required in *all* cases, it is better to use the `key` parameter because it'll reflect more of what you see on the Derpibooru site, especially when your user uses a default filter that is not the Derpibooru global default. <br/><br/> This document as is was contributed by a member of the Derpibooru site, however this is not maintained by the Philomena developers.  Philomena is the software that runs Derpibooru, and while the API is fully code documented there, the API documentation is not up to date, and there may be chagnes to the API that are not reflected in this document either as it is community contributed. <br/><br/>",
+    "version": "July 24, 2022"
+  },
+  "externalDocs": {
+    "description": "Original Derpibooru API documentation page",
+    "url": "https://derpibooru.org/pages/api"
   },
   "servers": [
     {
@@ -1000,7 +1004,8 @@
           "deletion_reason": {
             "type": "string",
             "description": "The hide reason for the image, or `null` if none provided. This will only have a value on images which are deleted for a rule violation.",
-            "example": null
+            "example": null,
+            "nullable": true
           },
           "descripton": {
             "type": "string",
@@ -1014,7 +1019,8 @@
           },
           "duplicate_of": {
             "type": "integer",
-            "description": "The ID of the target image, or `null` if none provided. This will only have a value on images which are merged into another image."
+            "description": "The ID of the target image, or `null` if none provided. This will only have a value on images which are merged into another image.",
+            "nullable": true
           },
           "duration": {
             "type": "number",
@@ -1034,7 +1040,7 @@
           },
           "format": {
             "type": "string",
-            "description": "The file extension of the image. One of `\"gif\", \"jpg\", \"jpeg\", \"png\", \"svg\", \"webm\"`.",
+            "description": "The file extension of the image. See enum array for valid values. - gif - jpg - jpeg - png - svg - webm",
             "example": "png"
           },
           "height": {
@@ -1053,19 +1059,18 @@
             "example": 1
           },
           "intensities": {
-            "type": "object",
-            "properties": {},
-            "description": "Optional object of [internal image intensity data](https://github.com/derpibooru/cli_intensities) for deduplication purposes. May be `null` if intensities have not yet been generated.",
-            "example": {
-              "ne": 212.264528,
-              "nw": 236.603365,
-              "se": 209.61604,
-              "sw": 216.636501
-            }
+            "$ref": "#/components/schemas/Intensities"
           },
           "mime_type": {
             "type": "string",
-            "description": "The MIME type of this image. One of `\"image/gif\", \"image/jpeg\", \"image/png\", \"image/svg+xml\", \"video/webm\"`.",
+            "description": "The MIME type of this image. See enum array for valid values.",
+            "enum": [
+              "image/gif",
+              "image/jpeg",
+              "image/png",
+              "image/svg+xml",
+              "video/webm"
+            ],
             "example": "image/png"
           },
           "name": {
@@ -1076,7 +1081,8 @@
           "orig_sha512_hash": {
             "type": "string",
             "description": "The SHA512 hash of the image as it was originally uploaded.",
-            "example": null
+            "example": null,
+            "nullable": true
           },
           "processed": {
             "type": "boolean",
@@ -1120,7 +1126,8 @@
               }
             },
             "description": "A mapping of representation names to their respective URLs.",
-            "example": null
+            "example": null,
+            "nullable": true
           },
           "score": {
             "type": "integer",
@@ -1274,7 +1281,8 @@
           "uploader_id": {
             "type": "integer",
             "description": "The ID of the image's uploader. `null` if uploaded anonymously.",
-            "example": 211188
+            "example": 211188,
+            "nullable": true
           },
           "upvotes": {
             "type": "integer",
@@ -1351,13 +1359,15 @@
           "edit_reason": {
             "type": "string",
             "description": "The edit reason for this comment, or `null` if none provided.",
-            "example": null
+            "example": null,
+            "nullable": true
           },
           "edited_at": {
             "type": "string",
             "description": "The time, in UTC, the comment was last edited at, or `null` if it was not edited.",
             "format": "date-time",
-            "example": null
+            "example": null,
+            "nullable": true
           },
           "id": {
             "type": "integer",
@@ -1454,7 +1464,8 @@
           "user_id": {
             "type": "integer",
             "description": "The ID of the user who made the topic. `null` if posted anonymously.",
-            "example": 216494
+            "example": 216494,
+            "nullable": true
           },
           "author": {
             "type": "string",
@@ -1496,7 +1507,8 @@
             "type": "string",
             "description": "The time, in UTC, this post was last edited at, or `null` if it was not edited.",
             "format": "date-time",
-            "example": null
+            "example": null,
+            "nullable": true
           },
           "id": {
             "type": "integer",
@@ -1512,7 +1524,8 @@
           "user_id": {
             "type": "integer",
             "description": "The ID of the user the post belongs to, if any.",
-            "example": 216494
+            "example": 216494,
+            "nullable": true
           }
         }
       },
@@ -1641,7 +1654,8 @@
           "avatar_url": {
             "type": "string",
             "description": "The URL of the user's thumbnail. `null` if the avatar is not set.",
-            "example": "https://derpicdn.net/avatars/2019/11/13/14215782720827205181237247282992609700.png"
+            "example": "https://derpicdn.net/avatars/2019/11/13/14215782720827205181237247282992609700.png",
+            "nullable": true
           },
           "created_at": {
             "type": "string",
@@ -1704,7 +1718,8 @@
           "user_id": {
             "type": "integer",
             "description": "The id of the user the filter belongs to. `null` if it isn't assigned to a user (usually `system` filters only).",
-            "example": null
+            "example": null,
+            "nullable": true
           },
           "user_count": {
             "type": "integer",
@@ -1767,7 +1782,8 @@
           },
           "tag_id": {
             "type": "integer",
-            "description": "The ID of an associated tag for this link. `null` if no tag linked."
+            "description": "The ID of an associated tag for this link. `null` if no tag linked.",
+            "nullable": true
           }
         }
       },
@@ -2085,6 +2101,29 @@
               "down",
               "(empty string)"
             ]
+          }
+        }
+      },
+      "Intensities": {
+        "type": "object",
+        "description": "An optional object representation of [internal image intensity data](https://github.com/derpibooru/cli_intensities) for deduplication purposes. This may be `null` if intensities weren't generated.",
+        "nullable": true,
+        "properties": {
+          "ne": {
+            "type": "number",
+            "example": 212.264528
+          },
+          "nw": {
+            "type": "number",
+            "example": 236.603365
+          },
+          "se": {
+            "type": "number",
+            "example": 209.61604
+          },
+          "sw": {
+            "type": "number",
+            "example": 216.636501
           }
         }
       }
