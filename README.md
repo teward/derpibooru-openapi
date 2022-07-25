@@ -13,3 +13,5 @@ spec sheet that Swaggger-UI can display.
 
 That is at https://apidocs.thomas-ward.net/derpibooru/ for anyone to read 
 through.
+
+Changelogs are to be tracked via the swagger-editor.yaml commit logs as those populate the other two formats.
